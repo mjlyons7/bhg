@@ -75,7 +75,7 @@ public class PlayerController : MonoBehaviour
             playerState = PlayerStates.States.IN_AIR;
         }
 
-        //----------Look for non-continuous inputs-------------
+        //----------Poll for non-continuous, non-physics inputs-------------
         if (controls.Player.Jump.WasPerformedThisFrame())
             jumpWasPressed = true;
 
@@ -126,7 +126,6 @@ public class PlayerController : MonoBehaviour
         if (playerSpeed < maxWalkingSpeed)
         {
             playerBody.AddForce(Vector2.right * horizontalInput * walkingForce);
-            Debug.Log(string.Format("Player speed: {0}", playerSpeed));
         }
 
   
@@ -141,23 +140,31 @@ public class PlayerController : MonoBehaviour
 
     void Fly(Vector2 movement)
     {
+        // allow jetpack movement..?
 
     }
 
     bool OnGround()
     {
-        bool isOnGround = false;
+        bool isOnGround; // return value
+        float colliderHeight;
+        RaycastHit2D rayHit;
+        float rayLength;
 
         // Test if we've hit the ground, measuring from the middle of our collider, plus extra
         // TODO: is hitting player, so no good
-        float colliderHeight = GetComponent<BoxCollider2D>().size.y;
-        RaycastHit2D groundHit = Physics2D.Raycast(transform.position, Vector2.down, colliderHeight / 2 + 1);
+        colliderHeight = GetComponent<BoxCollider2D>().size.y;
+        rayLength = (colliderHeight / 2.0f) + .05f;
 
-        if (groundHit)
+        rayHit = Physics2D.Raycast(transform.position, Vector2.down, rayLength, LayerMask.GetMask("Ground"));
+
+        //Debug.DrawRay(transform.position, Vector2.down * rayLength, Color.red);
+
+        isOnGround = false;
+        if (rayHit)
         {
-            Debug.Log(groundHit.collider.gameObject.name);
-            Debug.Log(colliderHeight);
-            if (groundHit.collider.gameObject.tag == "Ground")
+            Debug.Log(rayHit.collider.gameObject.name);
+            if (rayHit.collider.gameObject.tag == "Ground")
             {
                 isOnGround = true;
             }
@@ -166,10 +173,9 @@ public class PlayerController : MonoBehaviour
         return isOnGround;
     }
 
+    // TODO: why does player lose speed when colliding with the ground?
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.collider.gameObject.tag == "Ground"){
-            Debug.Log("On the ground");
-        }
+        // TODO: check force of collision, apply damage
     }
 }
