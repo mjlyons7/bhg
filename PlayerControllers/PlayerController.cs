@@ -8,28 +8,25 @@ using UnityEngine.Assertions;
 
 public class PlayerController : MonoBehaviour
 {
-    PlayerStates.States playerState;
+    public PlayerStates.States playerState;
     Rigidbody2D playerBody;
 
     GameActions controls;
 
     // forces and their multipliers
     float walkingForce;
-    float walkingForceMassProportionalConstant = 20;
+    float walkingAcceleration = 20;
 
     float jumpForce;
-    float jumpForceMassProportionalConstant = 6;
+    float jumpAcceleration = 6;
 
     float jetpackForce;
-    float jetpackForceMassProportionalConstant = 10;
+    float jetpackAcceleration = 20;
 
     float maxWalkingSpeed = 5;
 
     // flag set in update, to tell the physics system that the jump was pressed
     bool jumpWasPressed = false;
-
-    // raycast to detect the floor
-    RaycastHit2D floorDetector;
 
     // Awake is called before start
     private void Awake()
@@ -44,9 +41,9 @@ public class PlayerController : MonoBehaviour
         playerBody = GetComponent<Rigidbody2D>();
 
         // calculate forces to apply based on player's weight
-        walkingForce = playerBody.mass * walkingForceMassProportionalConstant;
-        jumpForce = playerBody.mass * jumpForceMassProportionalConstant;
-        jetpackForce = playerBody.mass * jetpackForceMassProportionalConstant;
+        walkingForce = playerBody.mass * walkingAcceleration;
+        jumpForce = playerBody.mass * jumpAcceleration;
+        jetpackForce = playerBody.mass * jetpackAcceleration;
 
 
     }
@@ -127,9 +124,6 @@ public class PlayerController : MonoBehaviour
         {
             playerBody.AddForce(Vector2.right * horizontalInput * walkingForce);
         }
-
-  
-        
     }
 
     // TODO: make jump better. Also lags because of fixedUpdate
@@ -140,7 +134,9 @@ public class PlayerController : MonoBehaviour
 
     void Fly(Vector2 movement)
     {
-        // allow jetpack movement..?
+        // allow jetpack movement
+        playerBody.AddForce(Vector2.right * movement.x * jetpackForce);
+        playerBody.AddForce(Vector2.up * movement.y * jetpackForce);
 
     }
 
@@ -152,7 +148,6 @@ public class PlayerController : MonoBehaviour
         float rayLength;
 
         // Test if we've hit the ground, measuring from the middle of our collider, plus extra
-        // TODO: is hitting player, so no good
         colliderHeight = GetComponent<BoxCollider2D>().size.y;
         rayLength = (colliderHeight / 2.0f) + .05f;
 
