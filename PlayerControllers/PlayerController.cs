@@ -9,6 +9,7 @@ using UnityEngine.Assertions;
 public class PlayerController : MonoBehaviour
 {
     public PlayerStates.States playerState;
+
     Rigidbody2D playerBody;
 
     GameActions controls;
@@ -27,6 +28,9 @@ public class PlayerController : MonoBehaviour
 
     // flag set in update, to tell the physics system that the jump was pressed
     bool jumpWasPressed = false;
+
+    // default inventory // TODO: don't hardcode this
+    public PlayerInventory inventory = new PlayerInventory(jetpack: true);
 
     // Awake is called before start
     private void Awake()
@@ -81,8 +85,9 @@ public class PlayerController : MonoBehaviour
     // Do physics moves. Physics engine runs at different framerate then the graphics
     private void FixedUpdate()
     {
-        // check for movement inputs
+        // Do all things that result in movement
         Move();
+
         //clear input booleans
         jumpWasPressed = false;
     }
@@ -95,6 +100,7 @@ public class PlayerController : MonoBehaviour
         Vector2 movement = controls.Player.Move.ReadValue<Vector2>();
 
         // respond to movement appropriately based on state of player
+        // TODO: move walk and fly to a seperate helper script
         switch (playerState)
         {
             case PlayerStates.States.ON_GROUND:
@@ -105,7 +111,10 @@ public class PlayerController : MonoBehaviour
                 break;
 
             case PlayerStates.States.IN_AIR:
-                Fly(movement);
+                if (inventory.jetpack)
+                {
+                    Fly(movement);
+                }
                 break;
 
             default:
@@ -117,10 +126,11 @@ public class PlayerController : MonoBehaviour
     {
         float horizontalInput = movement.x;
         float playerSpeed = Mathf.Abs(playerBody.velocity.x);
+        bool bAttemptingToSlowDown = false;
 
-        // only add more force if below max speed
-        // TODO: if we're above max speed, allow player to slow down
-        if (playerSpeed < maxWalkingSpeed)
+        // only add more force if less than max speed, or if trying to slow down (input and velocity vector have opposite signs)
+        bAttemptingToSlowDown = (horizontalInput * playerBody.velocity.x) < 0;
+        if (playerSpeed < maxWalkingSpeed || bAttemptingToSlowDown)
         {
             playerBody.AddForce(Vector2.right * horizontalInput * walkingForce);
         }
@@ -134,7 +144,7 @@ public class PlayerController : MonoBehaviour
 
     void Fly(Vector2 movement)
     {
-        // allow jetpack movement
+        // jetpack movement
         playerBody.AddForce(Vector2.right * movement.x * jetpackForce);
         playerBody.AddForce(Vector2.up * movement.y * jetpackForce);
 
@@ -158,7 +168,7 @@ public class PlayerController : MonoBehaviour
         isOnGround = false;
         if (rayHit)
         {
-            Debug.Log(rayHit.collider.gameObject.name);
+            //Debug.Log(rayHit.collider.gameObject.name);
             if (rayHit.collider.gameObject.tag == "Ground")
             {
                 isOnGround = true;

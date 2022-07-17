@@ -49,8 +49,11 @@ public class PlayerSpriteEffects : MonoBehaviour
         if (playerState == PlayerStates.States.IN_AIR)
         {
             // If player using jetpack, spawn smoke in opposite direction
-            direction = controls.Player.Move.ReadValue<Vector2>();
-            if (direction.magnitude > 0) spawnSmoke(direction);
+            if (player.GetComponent<PlayerController>().inventory.jetpack)
+            {
+                direction = controls.Player.Move.ReadValue<Vector2>();
+                if (direction.magnitude > 0) spawnSmoke(direction);
+            }
         }
     }
 
